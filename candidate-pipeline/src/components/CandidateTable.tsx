@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { type Candidate, STAGE_META } from '../types';
 
 interface Props {
@@ -49,6 +49,18 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
     const [sortKey, setSortKey] = useState<SortKey>('matchScore');
     const [sortDir, setSortDir] = useState<SortDir>('desc');
     const [actionOpen, setActionOpen] = useState<string | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+
+    // Close menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setActionOpen(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSort = (key: SortKey) => {
         if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
@@ -83,15 +95,16 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
     );
 
     return (
-        <div className="glass-panel rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
+        <div className="glass-panel rounded-2xl relative">
+            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between rounded-t-2xl">
                 <h2 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                     All Candidates
                 </h2>
                 <span className="text-xs text-white/40">{candidates.length} total</span>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Added extra bottom padding to the scrollable area to prevent menu clipping */}
+            <div className={`overflow-x-auto rounded-b-2xl transition-all ${actionOpen ? 'pb-44 -mb-44' : ''}`}>
                 <table className="w-full whitespace-nowrap">
                     <thead className="border-b border-white/5 bg-white/5">
                         <tr>
@@ -127,11 +140,12 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                 )
                                 : sorted.map((c) => {
                                     const meta = STAGE_META[c.stage];
+                                    const isOpen = actionOpen === c.id;
                                     return (
-
                                         <tr
                                             key={c.id}
-                                            className="hover:bg-white/[0.04] cursor-pointer transition-all duration-200 border-b border-white/[0.02]"
+                                            // Vital: Give the open row a high z-index so the menu appears OVER the rows below it
+                                            className={`hover:bg-white/[0.04] cursor-pointer transition-all duration-200 border-b border-white/[0.02] ${isOpen ? 'relative z-50' : 'z-0'}`}
                                             onClick={() => onCandidateClick(c)}
                                         >
                                             <td className="px-6 py-4">
@@ -146,24 +160,19 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                                 </div>
                                             </td>
 
-
-                                            {/* Role */}
                                             <td className="px-4 py-3.5">
                                                 <p className="text-sm text-white/80 font-medium">{c.currentRole}</p>
                                                 <p className="text-xs text-white/40">{c.company}</p>
                                             </td>
 
-                                            {/* Experience */}
                                             <td className="px-4 py-3.5">
                                                 <span className="text-sm text-white/80 font-medium">{c.experience} yr{c.experience !== 1 ? 's' : ''}</span>
                                             </td>
 
-                                            {/* Score */}
                                             <td className="px-4 py-3.5 min-w-[130px]">
                                                 <ScoreBar score={c.matchScore} />
                                             </td>
 
-                                            {/* Stage */}
                                             <td className="px-4 py-3.5">
                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${meta.bg} ${meta.text} border ${meta.border}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
@@ -171,28 +180,30 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                                 </span>
                                             </td>
 
-                                            {/* Last Activity */}
                                             <td className="px-4 py-3.5">
                                                 <span className="text-sm text-white/50">{timeAgo(c.lastActivity)}</span>
                                             </td>
 
-                                            {/* Actions */}
+                                            {/* Actions Column */}
                                             <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
-                                                <div className="relative">
+                                                <div className="relative flex justify-end" ref={isOpen ? menuRef : null}>
                                                     <button
-                                                        onClick={() => setActionOpen(actionOpen === c.id ? null : c.id)}
-                                                        className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+                                                        onClick={() => setActionOpen(isOpen ? null : c.id)}
+                                                        className={`p-1.5 rounded-lg transition-all border border-transparent ${isOpen ? 'text-yellow-400 bg-white/10 border-white/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
                                                     >
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                                                             <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
                                                         </svg>
                                                     </button>
-                                                    {actionOpen === c.id && (
-                                                        <div className="absolute right-0 top-8 z-20 bg-[#09090b]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] py-1.5 w-max min-w-[130px] whitespace-nowrap animate-fade-in">
-                                                            {['View Profile', 'Move to Next Stage', 'Schedule', 'Send Email', 'Add Note', 'Reject'].map(action => (
+                                                    
+                                                    {/* The Vertical Dropdown */}
+                                                    {isOpen && (
+                                                        <div className="absolute right-0 top-full mt-2 z-[100] bg-[#09090b]/95 backdrop-blur-3xl border border-white/10 rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.8)] py-2 w-max min-w-[160px] flex flex-col animate-fade-in origin-top-right">
+                                                            <p className="px-4 py-1.5 text-[9px] font-bold text-white/20 uppercase tracking-widest border-b border-white/5 mb-1">Actions</p>
+                                                            {['View Profile', 'Move to Next Stage', 'Schedule Interview', 'Send Email', 'Add Note', 'Reject'].map(action => (
                                                                 <button
                                                                     key={action}
-                                                                    className={`w-full text-left px-4 py-1.5 text-[11px] font-semibold hover:bg-white/5 transition-colors ${action === 'Reject' ? 'text-red-400 hover:text-red-300' : 'text-white/80'}`}
+                                                                    className={`w-full text-left px-4 py-2.5 text-[11px] font-bold transition-all ${action === 'Reject' ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
                                                                     onClick={() => { if (action === 'View Profile') onCandidateClick(c); setActionOpen(null); }}
                                                                 >
                                                                     {action}
