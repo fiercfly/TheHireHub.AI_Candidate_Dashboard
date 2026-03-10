@@ -188,11 +188,11 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                                         </svg>
                                                     </button>
                                                     {actionOpen === c.id && (
-                                                        <div className="absolute right-0 top-8 z-20 bg-[#09090b]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] py-1 min-w-[140px] animate-fade-in">
+                                                        <div className="absolute right-0 top-8 z-20 bg-[#09090b]/90 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] py-1.5 w-max min-w-[130px] whitespace-nowrap animate-fade-in">
                                                             {['View Profile', 'Move to Next Stage', 'Schedule', 'Send Email', 'Add Note', 'Reject'].map(action => (
                                                                 <button
                                                                     key={action}
-                                                                    className={`w-full text-left px-3 py-1.5 text-[11px] font-semibold hover:bg-white/5 transition-colors ${action === 'Reject' ? 'text-red-400 hover:text-red-300' : 'text-white/80'}`}
+                                                                    className={`w-full text-left px-4 py-1.5 text-[11px] font-semibold hover:bg-white/5 transition-colors ${action === 'Reject' ? 'text-red-400 hover:text-red-300' : 'text-white/80'}`}
                                                                     onClick={() => { if (action === 'View Profile') onCandidateClick(c); setActionOpen(null); }}
                                                                 >
                                                                     {action}
