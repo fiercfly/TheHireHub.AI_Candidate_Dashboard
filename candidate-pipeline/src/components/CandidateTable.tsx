@@ -19,24 +19,32 @@ const timeAgo = (dateStr: string): string => {
 
 const ScoreBar = ({ score }: { score: number }) => {
     const color = score >= 85 ? '#10B981' : score >= 70 ? '#F59E0B' : '#94A3B8';
+    const bgColor = score >= 85 ? '#D1FAE5' : score >= 70 ? '#FEF3C7' : '#F1F5F9';
     return (
         <div className="flex items-center gap-2">
-            <div className="flex-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
-                <div
-                    className="h-full rounded-full transition-all duration-500 shadow-[0_0_8px_currentColor]"
-                    style={{ width: `${score}%`, background: color }}
-                />
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: bgColor }}>
+                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${score}%`, background: color }} />
             </div>
-            <span className="text-xs font-bold" style={{ color, minWidth: 28 }}>{score}%</span>
+            <span className="text-xs font-bold min-w-[34px] text-right" style={{ color }}>{score}%</span>
+        </div>
+    );
+};
+
+const AvatarBadge = ({ initials }: { initials: string }) => {
+    const colors = ['bg-blue-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
+    const idx = initials.charCodeAt(0) % colors.length;
+    return (
+        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0 ${colors[idx]}`}>
+            {initials}
         </div>
     );
 };
 
 const SkeletonRow = () => (
-    <tr>
-        {[200, 160, 80, 120, 80, 90, 80].map((w, i) => (
+    <tr className="border-b border-slate-100">
+        {[200, 160, 80, 130, 90, 80, 60].map((w, i) => (
             <td key={i} className="px-4 py-3.5">
-                <div className="skeleton-dark h-4 rounded" style={{ width: w }} />
+                <div className="skeleton-light h-4 rounded" style={{ width: w }} />
             </td>
         ))}
     </tr>
@@ -51,15 +59,14 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
     const [actionOpen, setActionOpen] = useState<string | null>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
-    // Close menu when clicking outside
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        const handleClick = (e: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
                 setActionOpen(null);
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
     const handleSort = (key: SortKey) => {
@@ -77,8 +84,8 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
     });
 
     const SortIcon = ({ col }: { col: SortKey }) => (
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            className={`ml-1 transition-all ${sortKey === col ? 'opacity-100 neon-yellow-text' : 'opacity-30'}`}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+            className={`ml-1 transition-all ${sortKey === col ? 'opacity-100 text-blue-600' : 'opacity-30'}`}>
             {sortKey === col && sortDir === 'asc'
                 ? <polyline points="18 15 12 9 6 15" />
                 : <polyline points="6 9 12 15 18 9" />}
@@ -87,7 +94,7 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
 
     const ColHead = ({ col, label }: { col: SortKey; label: string }) => (
         <th
-            className="px-4 py-3 text-left text-xs font-semibold text-white/50 cursor-pointer select-none hover:text-white transition-colors"
+            className="px-4 py-3 text-left text-xs font-semibold text-slate-500 cursor-pointer select-none hover:text-slate-800 whitespace-nowrap transition-colors"
             onClick={() => handleSort(col)}
         >
             <div className="flex items-center">{label}<SortIcon col={col} /></div>
@@ -95,29 +102,27 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
     );
 
     return (
-        <div className="glass-panel rounded-2xl relative">
-            <div className="px-5 py-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between rounded-t-2xl">
-                <h2 className="text-base font-bold text-white tracking-tight" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                    All Candidates
-                </h2>
-                <span className="text-xs text-white/40">{candidates.length} total</span>
+        <div className="card overflow-hidden">
+            {/* Table header */}
+            <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                <h2 className="text-sm font-semibold text-slate-800">All Candidates</h2>
+                <span className="text-xs text-slate-400 font-medium">{candidates.length} total</span>
             </div>
 
-            {/* Added extra bottom padding to the scrollable area to prevent menu clipping */}
-            <div className={`overflow-x-auto rounded-b-2xl transition-all ${actionOpen ? 'pb-44 -mb-44' : ''}`}>
+            <div className={`overflow-x-auto transition-all ${actionOpen ? 'pb-44 -mb-44' : ''}`}>
                 <table className="w-full whitespace-nowrap">
-                    <thead className="border-b border-white/5 bg-white/5">
+                    <thead className="border-b border-slate-100 bg-white">
                         <tr>
                             <ColHead col="name" label="Candidate" />
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-white/50">Role / Company</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">Role / Company</th>
                             <ColHead col="experience" label="Experience" />
                             <ColHead col="matchScore" label="Match Score" />
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-white/50">Stage</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 whitespace-nowrap">Stage</th>
                             <ColHead col="lastActivity" label="Last Activity" />
-                            <th className="px-4 py-3 text-left text-xs font-semibold text-white/50">Actions</th>
+                            <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500">Actions</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-slate-100">
                         {loading
                             ? Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
                             : sorted.length === 0
@@ -125,14 +130,14 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                     <tr>
                                         <td colSpan={7} className="py-16 text-center">
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="w-14 h-14 rounded-full bg-white/5 flex items-center justify-center">
-                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-white/20" strokeWidth="1.5">
-                                                        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-400" strokeWidth="1.5">
+                                                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                                                     </svg>
                                                 </div>
                                                 <div>
-                                                    <p className="font-semibold text-white/60">No candidates found</p>
-                                                    <p className="text-sm text-white/40 mt-0.5">Try adjusting your search or filters</p>
+                                                    <p className="font-semibold text-slate-700">No candidates found</p>
+                                                    <p className="text-sm text-slate-400 mt-0.5">Try adjusting your search or filters</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -144,35 +149,39 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                     return (
                                         <tr
                                             key={c.id}
-                                            // Vital: Give the open row a high z-index so the menu appears OVER the rows below it
-                                            className={`hover:bg-white/[0.04] cursor-pointer transition-all duration-200 border-b border-white/[0.02] ${isOpen ? 'relative z-50' : 'z-0'}`}
+                                            className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${isOpen ? 'relative z-50 bg-blue-50/40' : ''}`}
                                             onClick={() => onCandidateClick(c)}
                                         >
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold text-black bg-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.3)] transition-transform group-hover:scale-110">
-                                                        {c.avatar}
-                                                    </div>
+                                            {/* Candidate */}
+                                            <td className="px-4 py-3.5">
+                                                <div className="flex items-center gap-3">
+                                                    <AvatarBadge initials={c.avatar} />
                                                     <div>
-                                                        <p className="text-sm font-bold text-white tracking-tight">{c.name}</p>
-                                                        <p className="text-[11px] text-white/40 uppercase tracking-wider font-semibold">{c.location}</p>
+                                                        <p className="text-sm font-semibold text-slate-900 leading-tight">{c.name}</p>
+                                                        <p className="text-xs text-slate-400 mt-0.5">{c.location}</p>
                                                     </div>
                                                 </div>
                                             </td>
 
+                                            {/* Role / Company */}
                                             <td className="px-4 py-3.5">
-                                                <p className="text-sm text-white/80 font-medium">{c.currentRole}</p>
-                                                <p className="text-xs text-white/40">{c.company}</p>
+                                                <p className="text-sm text-slate-700 font-medium">{c.currentRole}</p>
+                                                <p className="text-xs text-slate-400 mt-0.5">{c.company}</p>
                                             </td>
 
+                                            {/* Experience */}
                                             <td className="px-4 py-3.5">
-                                                <span className="text-sm text-white/80 font-medium">{c.experience} yr{c.experience !== 1 ? 's' : ''}</span>
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-600">
+                                                    {c.experience} yr{c.experience !== 1 ? 's' : ''}
+                                                </span>
                                             </td>
 
-                                            <td className="px-4 py-3.5 min-w-[130px]">
+                                            {/* Match Score */}
+                                            <td className="px-4 py-3.5 min-w-[140px]">
                                                 <ScoreBar score={c.matchScore} />
                                             </td>
 
+                                            {/* Stage */}
                                             <td className="px-4 py-3.5">
                                                 <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${meta.bg} ${meta.text} border ${meta.border}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
@@ -180,35 +189,46 @@ export default function CandidateTable({ candidates, onCandidateClick, loading =
                                                 </span>
                                             </td>
 
+                                            {/* Last Activity */}
                                             <td className="px-4 py-3.5">
-                                                <span className="text-sm text-white/50">{timeAgo(c.lastActivity)}</span>
+                                                <span className="text-xs text-slate-400">{timeAgo(c.lastActivity)}</span>
                                             </td>
 
-                                            {/* Actions Column */}
+                                            {/* Actions */}
                                             <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
                                                 <div className="relative flex justify-end" ref={isOpen ? menuRef : null}>
                                                     <button
                                                         onClick={() => setActionOpen(isOpen ? null : c.id)}
-                                                        className={`p-1.5 rounded-lg transition-all border border-transparent ${isOpen ? 'text-yellow-400 bg-white/10 border-white/10' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+                                                        className={`p-1.5 rounded-lg transition-all ${isOpen ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'}`}
                                                     >
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                                            <circle cx="12" cy="5" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="12" cy="19" r="1.5" />
+                                                            <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
                                                         </svg>
                                                     </button>
-                                                    
-                                                    {/* The Vertical Dropdown */}
+
                                                     {isOpen && (
-                                                        <div className="absolute right-0 top-full mt-2 z-[100] bg-[#09090b]/95 backdrop-blur-3xl border border-white/10 rounded-xl shadow-[0_10px_50px_rgba(0,0,0,0.8)] py-2 w-max min-w-[160px] flex flex-col animate-fade-in origin-top-right">
-                                                            <p className="px-4 py-1.5 text-[9px] font-bold text-white/20 uppercase tracking-widest border-b border-white/5 mb-1">Actions</p>
-                                                            {['View Profile', 'Move to Next Stage', 'Schedule Interview', 'Send Email', 'Add Note', 'Reject'].map(action => (
+                                                        <div className="absolute right-0 top-full mt-1.5 z-[100] bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 w-max min-w-[170px] animate-fade-in">
+                                                            <p className="px-3 py-1 text-[10px] font-semibold text-slate-400 uppercase tracking-widest border-b border-slate-100 mb-1">Actions</p>
+                                                            {[
+                                                                { label: 'View Profile', icon: '👤' },
+                                                                { label: 'Move to Next Stage', icon: '➜' },
+                                                                { label: 'Schedule Interview', icon: '📅' },
+                                                                { label: 'Send Email', icon: '✉️' },
+                                                                { label: 'Add Note', icon: '📝' },
+                                                            ].map(({ label, icon }) => (
                                                                 <button
-                                                                    key={action}
-                                                                    className={`w-full text-left px-4 py-2.5 text-[11px] font-bold transition-all ${action === 'Reject' ? 'text-red-400 hover:text-red-300 hover:bg-red-500/10' : 'text-white/70 hover:text-white hover:bg-white/5'}`}
-                                                                    onClick={() => { if (action === 'View Profile') onCandidateClick(c); setActionOpen(null); }}
+                                                                    key={label}
+                                                                    className="w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-700 transition-colors flex items-center gap-2.5"
+                                                                    onClick={() => { if (label === 'View Profile') onCandidateClick(c); setActionOpen(null); }}
                                                                 >
-                                                                    {action}
+                                                                    <span>{icon}</span>{label}
                                                                 </button>
                                                             ))}
+                                                            <div className="border-t border-slate-100 mt-1 pt-1">
+                                                                <button className="w-full text-left px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2.5" onClick={() => setActionOpen(null)}>
+                                                                    <span>🚫</span>Reject Candidate
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     )}
                                                 </div>

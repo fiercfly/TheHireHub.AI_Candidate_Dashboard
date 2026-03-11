@@ -17,10 +17,14 @@ const formatDate = (dateStr?: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const avatarColors = ['bg-blue-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
+const getAvatarColor = (initials: string) => avatarColors[initials.charCodeAt(0) % avatarColors.length];
+
 export default function CandidateDrawer({ candidate, onClose }: Props) {
     const [note, setNote] = useState('');
     const [activeTab, setActiveTab] = useState<'overview' | 'interviews' | 'notes'>('overview');
     const [visible, setVisible] = useState(false);
+    const [savedNotes, setSavedNotes] = useState<{ id: string; text: string; author: string; createdAt: string }[]>([]);
 
     useEffect(() => {
         if (candidate) {
@@ -32,7 +36,7 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
 
     const handleClose = () => {
         setVisible(false);
-        setTimeout(onClose, 250);
+        setTimeout(onClose, 280);
     };
 
     useEffect(() => {
@@ -41,47 +45,61 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
         return () => window.removeEventListener('keydown', handler);
     }, []);
 
+    const handleSaveNote = () => {
+        if (!note.trim()) return;
+        setSavedNotes(prev => [...prev, { id: Date.now().toString(), text: note.trim(), author: 'Sarah Chen', createdAt: new Date().toISOString() }]);
+        setNote('');
+    };
+
     if (!candidate) return null;
+
     const meta = STAGE_META[candidate.stage];
     const stageIdx = STAGES.indexOf(candidate.stage);
+    const allNotes = [...(candidate.notes || []), ...savedNotes];
+
+    const stageColors: Record<string, string> = {
+        Applied: '#3B82F6',
+        Shortlisted: '#8B5CF6',
+        Interview: '#F59E0B',
+        Offered: '#10B981',
+        Hired: '#16A34A',
+    };
 
     return (
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-40 transition-opacity duration-250"
-                style={{ background: 'rgba(0,0,0,0.6)', opacity: visible ? 1 : 0 }}
+                className="fixed inset-0 z-40 transition-opacity duration-280"
+                style={{ background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(2px)', opacity: visible ? 1 : 0 }}
                 onClick={handleClose}
             />
 
-            {/* Drawer panel */}
+            {/* Drawer */}
             <div
-                className="fixed right-0 top-0 h-full z-50 flex flex-col bg-[#09090b]/95 backdrop-blur-3xl shadow-2xl transition-transform duration-300 ease-out border-l border-white/10"
+                className="fixed right-0 top-0 h-full z-50 flex flex-col bg-white shadow-2xl border-l border-slate-200 transition-transform duration-280 ease-out"
                 style={{
-                    width: 'min(520px, 92vw)',
+                    width: 'min(520px, 96vw)',
                     transform: visible ? 'translateX(0)' : 'translateX(100%)',
                 }}
             >
                 {/* Header */}
-                <div className="px-6 py-5 border-b border-white/10 shrink-0">
+                <div className="px-6 py-5 border-b border-slate-200 shrink-0 bg-slate-50/80">
                     <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                            <div
-                                className="w-14 h-14 rounded-2xl flex items-center justify-center text-base font-bold text-black shrink-0 shadow-[0_0_15px_rgba(250,204,21,0.2)] bg-yellow-400"
-                            >
+                        <div className="flex items-center gap-3.5">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-base font-bold text-white shrink-0 ${getAvatarColor(candidate.avatar)}`}>
                                 {candidate.avatar}
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-white" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                                    {candidate.name}
-                                </h2>
-                                <p className="text-sm text-white/50">{candidate.currentRole} · {candidate.company}</p>
+                                <h2 className="text-base font-bold text-slate-900">{candidate.name}</h2>
+                                <p className="text-sm text-slate-500">{candidate.currentRole} · {candidate.company}</p>
                                 <div className="flex items-center gap-2 mt-1.5">
                                     <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.text} border ${meta.border}`}>
                                         <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
                                         {candidate.stage}
                                     </span>
-                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${candidate.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-white/50 border border-white/10'}`}>
+                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${candidate.status === 'Active'
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
                                         {candidate.status}
                                     </span>
                                 </div>
@@ -89,59 +107,52 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                         </div>
                         <button
                             onClick={handleClose}
-                            className="p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all border border-transparent hover:border-white/10"
+                            className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-all"
                         >
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                             </svg>
                         </button>
                     </div>
 
-                    {/* Match score + pipeline progress */}
+                    {/* Stats row */}
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="flex-1 bg-white/5 border border-white/5 rounded-xl p-3">
-                            <p className="text-xs text-white/50 mb-1">Match Score</p>
+                        <div className="flex-1 bg-white border border-slate-200 rounded-lg p-3">
+                            <p className="text-xs text-slate-500 mb-1.5">Match Score</p>
                             <div className="flex items-center gap-2">
-                                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-                                    <div className="h-full rounded-full shadow-[0_0_8px_currentColor]" style={{
-                                        width: `${candidate.matchScore}%`,
-                                        background: candidate.matchScore >= 85 ? '#10B981' : candidate.matchScore >= 70 ? '#F59E0B' : '#94A3B8'
-                                    }} />
+                                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                                    <div className="h-full rounded-full transition-all duration-500"
+                                        style={{
+                                            width: `${candidate.matchScore}%`,
+                                            background: candidate.matchScore >= 85 ? '#10B981' : candidate.matchScore >= 70 ? '#F59E0B' : '#94A3B8'
+                                        }} />
                                 </div>
-                                <span className="text-sm font-bold text-white">{candidate.matchScore}%</span>
+                                <span className="text-sm font-bold text-slate-900">{candidate.matchScore}%</span>
                             </div>
                         </div>
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-3 min-w-[80px] text-center">
-                            <p className="text-xs text-white/50 mb-0.5">Experience</p>
-                            <p className="text-sm font-bold text-white">{candidate.experience} yrs</p>
+                        <div className="bg-white border border-slate-200 rounded-lg p-3 min-w-[80px] text-center">
+                            <p className="text-xs text-slate-500 mb-0.5">Experience</p>
+                            <p className="text-sm font-bold text-slate-900">{candidate.experience} yrs</p>
                         </div>
-                        <div className="bg-white/5 border border-white/5 rounded-xl p-3 min-w-[80px] text-center">
-                            <p className="text-xs text-white/50 mb-0.5">Applied</p>
-                            <p className="text-sm font-bold text-white">{timeAgo(candidate.appliedAt)}</p>
+                        <div className="bg-white border border-slate-200 rounded-lg p-3 min-w-[80px] text-center">
+                            <p className="text-xs text-slate-500 mb-0.5">Applied</p>
+                            <p className="text-sm font-bold text-slate-900">{timeAgo(candidate.appliedAt)}</p>
                         </div>
                     </div>
 
-                    {/* Stage progress bar */}
+                    {/* Stage progress */}
                     <div>
-                        <p className="text-xs text-white/40 mb-2">Hiring Stage Progress</p>
+                        <p className="text-xs text-slate-500 mb-2 font-medium">Hiring Stage Progress</p>
                         <div className="flex gap-1.5">
                             {STAGES.map((s, i) => (
-                                <div
-                                    key={s}
-                                    className="flex-1 h-1.5 rounded-full transition-all"
-                                    style={{
-                                        background: i <= stageIdx ? STAGE_META[s].dot.replace('bg-', '') === 'blue-400' ? '#60A5FA'
-                                            : STAGE_META[s].dot.replace('bg-', '') === 'violet-400' ? '#A78BFA'
-                                                : STAGE_META[s].dot.replace('bg-', '') === 'amber-400' ? '#FBBF24'
-                                                    : STAGE_META[s].dot.replace('bg-', '') === 'emerald-400' ? '#34D399' : '#FACC15'
-                                            : 'rgba(255,255,255,0.1)'
-                                    }}
+                                <div key={s} className="flex-1 h-1.5 rounded-full transition-all"
+                                    style={{ background: i <= stageIdx ? (stageColors[s] ?? '#94A3B8') : '#E2E8F0' }}
                                 />
                             ))}
                         </div>
-                        <div className="flex justify-between mt-1">
+                        <div className="flex justify-between mt-1.5">
                             {STAGES.map(s => (
-                                <span key={s} className={`text-[9px] font-medium ${s === candidate.stage ? 'neon-yellow-text' : 'text-white/40'}`}>
+                                <span key={s} className={`text-[9px] font-semibold ${s === candidate.stage ? 'text-blue-600' : 'text-slate-400'}`}>
                                     {s}
                                 </span>
                             ))}
@@ -150,25 +161,25 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                 </div>
 
                 {/* Tabs */}
-                <div className="flex border-b border-white/10 shrink-0 px-2">
+                <div className="flex border-b border-slate-200 shrink-0 px-2 bg-white">
                     {(['overview', 'interviews', 'notes'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-3 text-sm font-semibold transition-all border-b-2 capitalize ${activeTab === tab
-                                ? 'border-yellow-400 neon-yellow-text'
-                                : 'border-transparent text-white/40 hover:text-white'
+                                ? 'border-blue-600 text-blue-700'
+                                : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300'
                                 }`}
                         >
                             {tab}
                             {tab === 'interviews' && candidate.interviewRounds.length > 0 && (
-                                <span className="ml-1.5 text-[10px] bg-yellow-400/20 neon-yellow-text rounded-full px-1.5 py-0.5">
+                                <span className={`ml-1.5 text-[10px] font-bold rounded-full px-1.5 py-0.5 ${activeTab === tab ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
                                     {candidate.interviewRounds.length}
                                 </span>
                             )}
-                            {tab === 'notes' && candidate.notes.length > 0 && (
-                                <span className="ml-1.5 text-[10px] bg-yellow-400/20 neon-yellow-text rounded-full px-1.5 py-0.5">
-                                    {candidate.notes.length}
+                            {tab === 'notes' && allNotes.length > 0 && (
+                                <span className={`ml-1.5 text-[10px] font-bold rounded-full px-1.5 py-0.5 ${activeTab === tab ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'}`}>
+                                    {allNotes.length}
                                 </span>
                             )}
                         </button>
@@ -176,21 +187,24 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                 </div>
 
                 {/* Body */}
-                <div className="flex-1 overflow-y-auto px-6 py-5">
+                <div className="flex-1 overflow-y-auto px-6 py-5 bg-white">
                     {activeTab === 'overview' && (
                         <div className="space-y-5 animate-fade-in">
                             {/* Contact */}
                             <div>
-                                <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Contact Info</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Contact Info</p>
                                 <div className="space-y-2.5">
                                     {[
-                                        { icon: '📧', label: candidate.email },
+                                        { icon: '✉️', label: candidate.email, href: `mailto:${candidate.email}` },
                                         { icon: '📱', label: candidate.phone },
                                         { icon: '📍', label: candidate.location },
-                                    ].map(({ icon, label }) => (
+                                    ].map(({ icon, label, href }) => (
                                         <div key={label} className="flex items-center gap-3 text-sm">
                                             <span className="text-base">{icon}</span>
-                                            <span className="text-white/60">{label}</span>
+                                            {href
+                                                ? <a href={href} className="text-blue-600 hover:underline">{label}</a>
+                                                : <span className="text-slate-600">{label}</span>
+                                            }
                                         </div>
                                     ))}
                                 </div>
@@ -198,16 +212,16 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
 
                             {/* Skills */}
                             <div>
-                                <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-3">Skills & Technologies</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Skills & Technologies</p>
                                 <div className="flex flex-wrap gap-2">
                                     {candidate.skills.map(s => {
-                                        let sbg = 'bg-white/5 text-white/60 border-white/10';
-                                        if (s.color.includes('blue')) sbg = 'bg-blue-500/10 text-blue-400 border-blue-500/20';
-                                        else if (s.color.includes('emerald')) sbg = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
-                                        else if (s.color.includes('indigo')) sbg = 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20';
-                                        else if (s.color.includes('rose')) sbg = 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+                                        let cls = 'bg-slate-100 text-slate-600 border-slate-200';
+                                        if (s.color.includes('blue'))    cls = 'bg-blue-50 text-blue-700 border-blue-200';
+                                        else if (s.color.includes('emerald')) cls = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                        else if (s.color.includes('indigo'))  cls = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                                        else if (s.color.includes('rose'))    cls = 'bg-rose-50 text-rose-700 border-rose-200';
                                         return (
-                                            <span key={s.name} className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${sbg}`}>
+                                            <span key={s.name} className={`text-xs font-semibold px-3 py-1.5 rounded-lg border ${cls}`}>
                                                 {s.name}
                                             </span>
                                         );
@@ -219,12 +233,12 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                             <div className="grid grid-cols-3 gap-3">
                                 {[
                                     { label: 'Interviews Done', value: candidate.interviewRounds.filter(r => r.status === 'Completed').length },
-                                    { label: 'Notes', value: candidate.notes.length },
+                                    { label: 'Notes', value: allNotes.length },
                                     { label: 'Days in Pipeline', value: Math.floor((Date.now() - new Date(candidate.appliedAt).getTime()) / 86400000) },
                                 ].map(({ label, value }) => (
-                                    <div key={label} className="bg-white/5 border border-white/5 rounded-xl p-3.5 text-center">
-                                        <p className="text-xl font-bold text-white">{value}</p>
-                                        <p className="text-xs text-white/40 mt-0.5">{label}</p>
+                                    <div key={label} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-center">
+                                        <p className="text-xl font-bold text-slate-900">{value}</p>
+                                        <p className="text-xs text-slate-500 mt-0.5">{label}</p>
                                     </div>
                                 ))}
                             </div>
@@ -235,38 +249,36 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                         <div className="space-y-3 animate-fade-in">
                             {candidate.interviewRounds.length === 0 ? (
                                 <div className="text-center py-12">
-                                    <div className="text-4xl mb-3 opacity-80">🗓️</div>
-                                    <p className="font-semibold text-white/60">No interviews scheduled</p>
-                                    <p className="text-sm text-white/40 mt-1">Schedule the first round below</p>
+                                    <div className="text-4xl mb-3 opacity-60">🗓️</div>
+                                    <p className="font-semibold text-slate-600">No interviews scheduled</p>
+                                    <p className="text-sm text-slate-400 mt-1">Schedule the first round below</p>
                                 </div>
                             ) : (
                                 candidate.interviewRounds.map((r, i) => {
-                                    const statusColors: Record<string, string> = {
-                                        Completed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                                        Scheduled: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                        Pending: 'bg-white/5 text-white/50 border-white/10',
+                                    const statusCls: Record<string, string> = {
+                                        Completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                        Scheduled: 'bg-blue-50 text-blue-700 border-blue-200',
+                                        Pending: 'bg-slate-100 text-slate-500 border-slate-200',
                                     };
                                     return (
-                                        <div key={i} className="flex items-start gap-4 p-4 bg-white/5 rounded-xl border border-white/10">
+                                        <div key={i} className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
                                             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5
-                        ${r.status === 'Completed' ? 'bg-emerald-500 text-white' : r.status === 'Scheduled' ? 'bg-blue-500 text-white' : 'bg-white/10 text-white/50'}`}>
+                                                ${r.status === 'Completed' ? 'bg-emerald-500 text-white' : r.status === 'Scheduled' ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
                                                 {r.status === 'Completed' ? '✓' : i + 1}
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                                                    <p className="text-sm font-semibold text-white">{r.round}</p>
-                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusColors[r.status]}`}>
-                                                        {r.status}
-                                                    </span>
+                                                    <p className="text-sm font-semibold text-slate-800">{r.round}</p>
+                                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${statusCls[r.status]}`}>{r.status}</span>
                                                 </div>
-                                                {r.interviewer && <p className="text-xs text-white/50 mt-0.5">Interviewer: {r.interviewer}</p>}
-                                                {r.date && <p className="text-xs text-white/40 mt-0.5">{formatDate(r.date)}</p>}
+                                                {r.interviewer && <p className="text-xs text-slate-500 mt-0.5">Interviewer: {r.interviewer}</p>}
+                                                {r.date && <p className="text-xs text-slate-400 mt-0.5">{formatDate(r.date)}</p>}
                                             </div>
                                         </div>
                                     );
                                 })
                             )}
-                            <button className="w-full py-2.5 rounded-xl text-sm font-semibold neon-yellow-text bg-yellow-400/10 hover:bg-yellow-400/20 transition-colors border border-yellow-400/20 mt-2">
+                            <button className="w-full py-2.5 rounded-xl text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors border border-blue-200 mt-2">
                                 + Schedule Interview Round
                             </button>
                         </div>
@@ -274,40 +286,41 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
 
                     {activeTab === 'notes' && (
                         <div className="space-y-4 animate-fade-in">
-                            {candidate.notes.length === 0 && (
+                            {allNotes.length === 0 && (
                                 <div className="text-center py-8">
-                                    <div className="text-3xl mb-2 opacity-80">📝</div>
-                                    <p className="text-sm text-white/50">No notes yet. Add the first one below.</p>
+                                    <div className="text-3xl mb-2 opacity-60">📝</div>
+                                    <p className="text-sm text-slate-500">No notes yet. Add the first one below.</p>
                                 </div>
                             )}
-                            {candidate.notes.map(n => (
-                                <div key={n.id} className="p-4 glass-panel border border-white/10 rounded-xl">
+                            {allNotes.map((n, i) => (
+                                <div key={n.id ?? i} className="p-4 border border-slate-200 rounded-xl bg-slate-50">
                                     <div className="flex items-center gap-2.5 mb-2">
-                                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-black shrink-0 bg-yellow-400">
-                                            {n.avatar}
+                                        <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 bg-blue-600">
+                                            {'avatar' in n ? (n as { avatar: string }).avatar : 'SC'}
                                         </div>
                                         <div>
-                                            <p className="text-xs font-semibold text-white/80">{n.author}</p>
-                                            <p className="text-[11px] text-white/40">{formatDate(n.createdAt)}</p>
+                                            <p className="text-xs font-semibold text-slate-800">{n.author}</p>
+                                            <p className="text-[11px] text-slate-400">{formatDate(n.createdAt)}</p>
                                         </div>
                                     </div>
-                                    <p className="text-sm text-white/80 leading-relaxed">{n.text}</p>
+                                    <p className="text-sm text-slate-700 leading-relaxed">{n.text}</p>
                                 </div>
                             ))}
 
                             {/* Add note */}
-                            <div className="mt-4">
-                                <p className="text-xs font-semibold text-white/40 uppercase tracking-wider mb-2">Add Note</p>
+                            <div className="mt-4 border-t border-slate-100 pt-4">
+                                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Add Note</p>
                                 <textarea
                                     value={note}
                                     onChange={e => setNote(e.target.value)}
                                     placeholder="Write your observation or feedback..."
                                     rows={3}
-                                    className="w-full px-4 py-3 border border-white/10 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 focus:border-yellow-400 bg-black/20 resize-none transition-all"
+                                    className="b2b-input w-full px-4 py-3 rounded-xl text-sm text-slate-800 placeholder-slate-400 resize-none"
                                 />
                                 <button
                                     disabled={!note.trim()}
-                                    className="mt-2 px-4 py-2 rounded-lg text-sm font-semibold text-black bg-yellow-400 transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-110 shadow-[0_0_15px_rgba(250,204,21,0.3)] disabled:shadow-none"
+                                    onClick={handleSaveNote}
+                                    className="btn-primary mt-2 px-4 py-2 text-sm disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                                 >
                                     Save Note
                                 </button>
@@ -316,16 +329,16 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                     )}
                 </div>
 
-                {/* Footer actions */}
-                <div className="px-6 py-4 border-t border-white/10 shrink-0 glass-panel bg-[#09090b]/40 backdrop-blur-md">
+                {/* Footer */}
+                <div className="px-6 py-4 border-t border-slate-200 shrink-0 bg-slate-50">
                     <div className="flex items-center gap-2.5">
-                        <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white/80 glass-panel border border-white/10 hover:bg-white/10 transition-colors">
+                        <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                             Schedule Interview
                         </button>
-                        <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-black transition-all hover:brightness-110 shadow-[0_0_15px_rgba(250,204,21,0.3)] bg-yellow-400">
-                            Move to Next Stage →
+                        <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                            Move Forward →
                         </button>
-                        <button className="py-2.5 px-3 rounded-xl text-sm font-semibold text-red-400 hover:bg-red-500/10 transition-colors border border-red-500/20">
+                        <button className="py-2.5 px-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors border border-red-200">
                             Reject
                         </button>
                     </div>
