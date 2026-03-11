@@ -57,7 +57,10 @@ const typeIcon: Record<string, string> = { 'Video Call': '📹', 'In-Person': '�
 
 const stars = (n: number) => '★'.repeat(n) + '☆'.repeat(5 - n);
 
+import { useToast } from './ToastProvider';
+
 export default function InterviewsPage() {
+    const { showToast } = useToast();
     const today = interviews.filter(i => i.date === 'Today');
     const upcoming = interviews.filter(i => i.date !== 'Today');
 
@@ -113,8 +116,14 @@ export default function InterviewsPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                                <button className="flex-1 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">Join Call</button>
-                                <button className="flex-1 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">Reschedule</button>
+                                <button 
+                                    onClick={() => showToast(`Joining call with ${iv.candidate}...`, 'success')}
+                                    className="flex-1 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                                >Join Call</button>
+                                <button 
+                                    onClick={() => showToast(`Rescheduling interview for ${iv.candidate}`, 'info')}
+                                    className="flex-1 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                                >Reschedule</button>
                             </div>
                         </div>
                     ))}
@@ -139,7 +148,10 @@ export default function InterviewsPage() {
                                 </div>
                                 <span className="hidden md:inline text-xs text-slate-400">{typeIcon[iv.type]} {iv.type}</span>
                                 <span className="text-xs text-slate-400 hidden lg:inline">{iv.interviewer}</span>
-                                <button className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors shrink-0">Details</button>
+                                <button 
+                                    onClick={() => showToast(`Viewing details for ${iv.candidate}'s interview`, 'info')}
+                                    className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors shrink-0"
+                                >Details</button>
                             </div>
                         ))}
                     </div>

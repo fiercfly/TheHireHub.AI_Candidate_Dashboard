@@ -17,7 +17,28 @@ const integrations = [
     { name: 'DocuSign', icon: '✍️', desc: 'E-sign offer letters automatically', connected: false, color: 'bg-slate-50 border-slate-200' },
 ];
 
+import { useState } from 'react';
+import { useToast } from './ToastProvider';
+
 export default function SettingsPage() {
+    const { showToast } = useToast();
+    const [notifications, setNotifications] = useState<Record<string, boolean>>({
+        'New candidate applied': true,
+        'Interview scheduled': true,
+        'Stage changes': true,
+        'Offer accepted / rejected': true,
+        'Weekly hiring report': false,
+        'Team activity': false,
+    });
+    
+    const toggleNotification = (key: string) => {
+        setNotifications(prev => {
+            const next = !prev[key];
+            showToast(`${key} notifications ${next ? 'enabled' : 'disabled'}`, 'info');
+            return { ...prev, [key]: next };
+        });
+    };
+
     return (
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5">
             <div className="grid lg:grid-cols-3 gap-5">
@@ -56,7 +77,10 @@ export default function SettingsPage() {
                                 <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
                             </div>
                         </div>
-                        <button className="btn-primary w-full py-2 text-sm mt-2">Save Changes</button>
+                        <button 
+                            onClick={() => showToast('Profile settings saved successfully!', 'success')}
+                            className="btn-primary w-full py-2 text-sm mt-2"
+                        >Save Changes</button>
                     </div>
                 </div>
 
@@ -78,8 +102,11 @@ export default function SettingsPage() {
                                         <p className="text-sm font-medium text-slate-800">{n.label}</p>
                                         <p className="text-xs text-slate-400 mt-0.5">{n.sub}</p>
                                     </div>
-                                    <button className={`relative inline-flex h-5 w-9 rounded-full transition-colors shrink-0 ${n.on ? 'bg-blue-600' : 'bg-slate-200'}`}>
-                                        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform mt-0.5 ${n.on ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                    <button 
+                                        onClick={() => toggleNotification(n.label)}
+                                        className={`relative inline-flex h-5 w-9 rounded-full transition-colors shrink-0 ${notifications[n.label] ? 'bg-blue-600' : 'bg-slate-200'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform mt-0.5 ${notifications[n.label] ? 'translate-x-4' : 'translate-x-0.5'}`} />
                                     </button>
                                 </div>
                             ))}
@@ -90,7 +117,10 @@ export default function SettingsPage() {
                     <div className="card overflow-hidden">
                         <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                             <h2 className="text-sm font-bold text-slate-800">Team Members</h2>
-                            <button className="btn-primary px-3 py-1.5 text-xs">+ Invite Member</button>
+                            <button 
+                                onClick={() => showToast('Opening member invite form...', 'info')}
+                                className="btn-primary px-3 py-1.5 text-xs"
+                            >+ Invite Member</button>
                         </div>
                         <div className="divide-y divide-slate-100">
                             {teamMembers.map(m => (
@@ -128,9 +158,12 @@ export default function SettingsPage() {
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-slate-800">{intg.name}</p>
                                 <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{intg.desc}</p>
-                                <button className={`mt-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${intg.connected
+                                <button 
+                                    onClick={() => showToast(intg.connected ? `Disconnected from ${intg.name}` : `Connected to ${intg.name}`, intg.connected ? 'info' : 'success')}
+                                    className={`mt-2.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${intg.connected
                                     ? 'bg-white text-slate-600 border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
-                                    : 'btn-primary'}`}>
+                                    : 'btn-primary'}`}
+                                >
                                     {intg.connected ? 'Connected ✓' : 'Connect'}
                                 </button>
                             </div>

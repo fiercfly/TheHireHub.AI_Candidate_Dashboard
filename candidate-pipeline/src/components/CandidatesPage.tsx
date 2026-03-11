@@ -33,7 +33,22 @@ const ScoreBar = ({ score }: { score: number }) => {
     );
 };
 
+import { useState } from 'react';
+import { useToast } from './ToastProvider';
+
 export default function CandidatesPage() {
+    const { showToast } = useToast();
+    const [activeStage, setActiveStage] = useState('All');
+
+    const stages = [
+        { label: 'All', count: 10 },
+        { label: 'Applied', count: 2 },
+        { label: 'Shortlisted', count: 2 },
+        { label: 'Interview', count: 3 },
+        { label: 'Offered', count: 2 },
+        { label: 'Hired', count: 1 },
+    ];
+
     return (
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
             {/* Header row */}
@@ -64,19 +79,22 @@ export default function CandidatesPage() {
 
             {/* Stage summary chips */}
             <div className="flex flex-wrap gap-2">
-                {[
-                    { label: 'All', count: 10, active: true },
-                    { label: 'Applied', count: 2 },
-                    { label: 'Shortlisted', count: 2 },
-                    { label: 'Interview', count: 3 },
-                    { label: 'Offered', count: 2 },
-                    { label: 'Hired', count: 1 },
-                ].map(s => (
-                    <button key={s.label} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${s.active ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700'}`}>
-                        {s.label}
-                        <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${s.active ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>{s.count}</span>
-                    </button>
-                ))}
+                {stages.map(s => {
+                    const isActive = s.label === activeStage;
+                    return (
+                        <button 
+                            key={s.label} 
+                            onClick={() => {
+                                setActiveStage(s.label);
+                                showToast(`Filtered candidates by stage: ${s.label}`, 'info');
+                            }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${isActive ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:text-blue-700'}`}
+                        >
+                            {s.label}
+                            <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${isActive ? 'bg-white/20' : 'bg-slate-100 text-slate-500'}`}>{s.count}</span>
+                        </button>
+                    );
+                })}
             </div>
 
             {/* Table */}
@@ -119,7 +137,13 @@ export default function CandidatesPage() {
                                         <span className="text-xs text-slate-400">{c.applied}</span>
                                     </td>
                                     <td className="px-4 py-3.5">
-                                        <button className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors">View</button>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                showToast(`Opening drawer for ${c.name}`, 'success');
+                                            }}
+                                            className="px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                                        >View</button>
                                     </td>
                                 </tr>
                             ))}

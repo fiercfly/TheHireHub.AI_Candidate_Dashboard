@@ -49,7 +49,11 @@ const topJobs = [
     { title: 'Backend Engineer', dept: 'Engineering', applicants: 97, open: 4, fill: 55 },
 ];
 
+import { useToast } from './ToastProvider';
+
 export default function DashboardPage() {
+    const { showToast } = useToast();
+
     return (
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5">
             {/* KPI Row */}
@@ -102,7 +106,10 @@ export default function DashboardPage() {
                 <div className="card p-5 lg:col-span-2">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-sm font-semibold text-slate-800">Active Job Openings</h2>
-                        <button className="text-xs text-blue-600 font-medium hover:underline">View all</button>
+                        <button 
+                            onClick={() => showToast('Navigating to All Jobs...', 'info')}
+                            className="text-xs text-blue-600 font-medium hover:underline"
+                        >View all</button>
                     </div>
                     <div className="divide-y divide-slate-100">
                         {topJobs.map(j => (
@@ -120,7 +127,10 @@ export default function DashboardPage() {
                                             style={{ width: `${j.fill}%` }} />
                                     </div>
                                 </div>
-                                <button className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors">
+                                <button 
+                                    onClick={() => showToast(`Opening pipeline for ${j.title}`, 'success')}
+                                    className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors"
+                                >
                                     View
                                 </button>
                             </div>
@@ -133,7 +143,10 @@ export default function DashboardPage() {
             <div className="card p-5">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-sm font-semibold text-slate-800">Recent Activity</h2>
-                    <button className="text-xs text-blue-600 font-medium hover:underline">View all</button>
+                    <button 
+                        onClick={() => showToast('Loading full activity log...', 'info')}
+                        className="text-xs text-blue-600 font-medium hover:underline"
+                    >View all</button>
                 </div>
                 <div className="divide-y divide-slate-100">
                     {recentActivity.map((a, i) => (

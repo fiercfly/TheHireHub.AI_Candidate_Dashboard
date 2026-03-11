@@ -28,7 +28,13 @@ const kpis = [
     { label: 'Cost per Hire', value: '$4.2k', sub: '↓ 8% from last quarter', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
 ];
 
+import { useState } from 'react';
+import { useToast } from './ToastProvider';
+
 export default function ReportsPage() {
+    const { showToast } = useToast();
+    const [timeframe, setTimeframe] = useState('6M');
+
     return (
         <main className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5">
             {/* KPI tiles */}
@@ -48,8 +54,17 @@ export default function ReportsPage() {
                     <div className="flex items-center justify-between mb-5">
                         <h2 className="text-sm font-semibold text-slate-800">Hires per Month</h2>
                         <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg p-0.5">
-                            {['3M', '6M', '1Y'].map((t, i) => (
-                                <button key={t} className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${i === 1 ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}>{t}</button>
+                            {['3M', '6M', '1Y'].map((t) => (
+                                <button 
+                                    key={t} 
+                                    onClick={() => {
+                                        setTimeframe(t);
+                                        showToast(`Showing data for ${t}`, 'info');
+                                    }}
+                                    className={`px-2.5 py-1 rounded text-xs font-semibold transition-colors ${timeframe === t ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-800'}`}
+                                >
+                                    {t}
+                                </button>
                             ))}
                         </div>
                     </div>
@@ -93,7 +108,10 @@ export default function ReportsPage() {
             <div className="card overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                     <h2 className="text-sm font-semibold text-slate-800">Metrics by Role</h2>
-                    <button className="text-xs text-blue-600 font-medium hover:underline">Export CSV</button>
+                    <button 
+                        onClick={() => showToast('Exporting metrics to CSV...', 'success')}
+                        className="text-xs text-blue-600 font-medium hover:underline"
+                    >Export CSV</button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full whitespace-nowrap">
