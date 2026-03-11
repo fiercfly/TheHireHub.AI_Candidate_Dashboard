@@ -42,7 +42,7 @@ const interviews = [
     {
         id: 'i7', candidate: 'James Lee', avatar: 'JL', color: 'bg-teal-500',
         role: 'Backend Engineer', round: 'Final Interview',
-        interviewer: 'CEO — Ishank Sharma', time: '4:00 PM', date: 'Mar 15', duration: '60 min',
+        interviewer: 'Ishank Sharma', time: '4:00 PM', date: 'Mar 15', duration: '60 min',
         type: 'In-Person', status: 'Scheduled', link: 'Boardroom, Floor 5',
     },
 ];
