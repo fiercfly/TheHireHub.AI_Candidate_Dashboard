@@ -27,6 +27,7 @@ export default function PipelineBoard({ candidates, onCandidateClick, onDragStar
     const [dragOverStage, setDragOverStage] = useState<Stage | null>(null);
 
     const handleDragStart = (e: React.DragEvent, id: string) => {
+        e.dataTransfer.setData('text/plain', id);
         e.dataTransfer.setData('candidateId', id);
         e.dataTransfer.effectAllowed = 'move';
         // setTimeout ensures the visual dragged "ghost" image is generated 
@@ -50,7 +51,7 @@ export default function PipelineBoard({ candidates, onCandidateClick, onDragStar
         e.preventDefault();
         e.stopPropagation();
         
-        const candidateId = e.dataTransfer.getData('candidateId');
+        const candidateId = draggedId || e.dataTransfer.getData('text/plain') || e.dataTransfer.getData('candidateId');
         if (!candidateId) return;
 
         const stageCandidates = byStage(stage);
