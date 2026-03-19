@@ -12,7 +12,7 @@ import CandidatesPage from './components/CandidatesPage';
 import InterviewsPage from './components/InterviewsPage';
 import ReportsPage from './components/ReportsPage';
 import SettingsPage from './components/SettingsPage';
-import type { Candidate, FilterState } from './types';
+import type { Candidate, FilterState, Stage } from './types';
 import { mockCandidates, mockJob } from './data/mockData';
 
 const DEFAULT_FILTERS: FilterState = {
@@ -138,7 +138,16 @@ export default function App() {
                     ))}
                   </div>
                 ) : (
-                  <PipelineBoard candidates={filteredCandidates} onCandidateClick={setSelectedCandidate} />
+                  <PipelineBoard 
+                    candidates={filteredCandidates} 
+                    onCandidateClick={setSelectedCandidate} 
+                    onDragEnd={(candidateId: string, newStage: Stage) => {
+                      const candidate = candidates.find(c => c.id === candidateId);
+                      if (candidate) {
+                        handleUpdateCandidate({ ...candidate, stage: newStage });
+                      }
+                    }}
+                  />
                 )}
               </div>
             )}
