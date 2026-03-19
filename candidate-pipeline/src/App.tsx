@@ -142,11 +142,34 @@ export default function App() {
                     candidates={filteredCandidates} 
                     onCandidateClick={setSelectedCandidate} 
                     onDragStart={() => setSelectedCandidate(null)}
-                    onDragEnd={(candidateId: string, newStage: Stage) => {
-                      const candidate = candidates.find(c => c.id === candidateId);
-                      if (candidate) {
-                        handleUpdateCandidate({ ...candidate, stage: newStage });
-                      }
+                    onDragEnd={(candidateId: string, newStage: Stage, destinationIndex: number) => {
+                      setCandidates(prev => {
+                        const newCandidates = [...prev];
+                        const globalIndex = newCandidates.findIndex(c => c.id === candidateId);
+                        if (globalIndex === -1) return prev;
+                        
+                        // Remove the element from its old position
+                        const [draggedCandidate] = newCandidates.splice(globalIndex, 1);
+                        const updatedCandidate = { ...draggedCandidate, stage: newStage };
+                        
+                        // Find what currently occupies the destination index in the filtered stage view
+                        const stageFiltered = filteredCandidates.filter(c => c.stage === newStage && c.id !== candidateId);
+                        const targetCandidate = stageFiltered[destinationIndex];
+                        
+                        if (targetCandidate) {
+                            const targetGlobalIndex = newCandidates.findIndex(c => c.id === targetCandidate.id);
+                            if (targetGlobalIndex !== -1) {
+                                newCandidates.splice(targetGlobalIndex, 0, updatedCandidate);
+                            } else {
+                                newCandidates.push(updatedCandidate);
+                            }
+                        } else {
+                            // If dropped at the end
+                            newCandidates.push(updatedCandidate);
+                        }
+                        
+                        return newCandidates;
+                      });
                       setSelectedCandidate(null);
                     }}
                   />

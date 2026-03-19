@@ -5,7 +5,7 @@ interface Props {
     candidates: Candidate[];
     onCandidateClick: (c: Candidate) => void;
     onDragStart?: () => void;
-    onDragEnd: (candidateId: string, newStage: Stage) => void;
+    onDragEnd: (candidateId: string, newStage: Stage, destinationIndex: number) => void;
 }
 
 const avatarColors = ['bg-blue-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
@@ -27,10 +27,9 @@ const KanbanCard = ({ candidate, onClick, index }: { candidate: Candidate; onCli
                 ref={provided.innerRef}
                 {...provided.draggableProps}
                 {...provided.dragHandleProps}
-                onClick={() => {
-                    if (!snapshot.isDragging) {
-                        onClick();
-                    }
+                onClick={(e) => {
+                    if (e.defaultPrevented) return;
+                    onClick();
                 }}
                 className={`bg-white rounded-xl p-3.5 cursor-pointer border hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5 group shadow-sm ${
                     snapshot.isDragging ? 'border-blue-500 shadow-lg ring-2 ring-blue-500/20 z-[100] !transition-none' : 'border-slate-200 transition-all'
@@ -79,7 +78,7 @@ export default function PipelineBoard({ candidates, onCandidateClick, onDragStar
         if (!destination) return;
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-        onDragEnd(draggableId, destination.droppableId as Stage);
+        onDragEnd(draggableId, destination.droppableId as Stage, destination.index);
     };
 
     return (
