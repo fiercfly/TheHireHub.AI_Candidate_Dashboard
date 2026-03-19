@@ -146,6 +146,7 @@ export default function App() {
                       if (candidate) {
                         handleUpdateCandidate({ ...candidate, stage: newStage });
                       }
+                      setSelectedCandidate(null);
                     }}
                   />
                 )}
