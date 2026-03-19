@@ -104,14 +104,14 @@ export default function CandidateDrawer({ candidate, onClose, onUpdateCandidate 
         <>
             {/* Backdrop */}
             <div
-                className="fixed inset-0 z-40 transition-opacity duration-280"
+                className="fixed inset-0 z-[999] transition-opacity duration-280"
                 style={{ background: 'rgba(15,23,42,0.35)', backdropFilter: 'blur(2px)', opacity: visible ? 1 : 0 }}
                 onClick={handleClose}
             />
 
             {/* Drawer */}
             <div
-                className="fixed right-0 top-0 h-full z-50 flex flex-col bg-white shadow-2xl border-l border-slate-200 transition-transform duration-280 ease-out"
+                className="fixed right-0 top-0 h-full z-[1000] flex flex-col bg-white shadow-2xl border-l border-slate-200 transition-transform duration-280 ease-out"
                 style={{
                     width: 'min(520px, 96vw)',
                     transform: visible ? 'translateX(0)' : 'translateX(100%)',

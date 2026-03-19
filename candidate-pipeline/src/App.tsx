@@ -141,6 +141,7 @@ export default function App() {
                   <PipelineBoard 
                     candidates={filteredCandidates} 
                     onCandidateClick={setSelectedCandidate} 
+                    onDragStart={() => setSelectedCandidate(null)}
                     onDragEnd={(candidateId: string, newStage: Stage) => {
                       const candidate = candidates.find(c => c.id === candidateId);
                       if (candidate) {

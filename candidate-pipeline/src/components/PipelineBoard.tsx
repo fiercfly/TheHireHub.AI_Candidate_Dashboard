@@ -4,6 +4,7 @@ import { type Candidate, type Stage, STAGES, STAGE_META } from '../types';
 interface Props {
     candidates: Candidate[];
     onCandidateClick: (c: Candidate) => void;
+    onDragStart?: () => void;
     onDragEnd: (candidateId: string, newStage: Stage) => void;
 }
 
@@ -69,7 +70,7 @@ const KanbanCard = ({ candidate, onClick, index }: { candidate: Candidate; onCli
     </Draggable>
 );
 
-export default function PipelineBoard({ candidates, onCandidateClick, onDragEnd }: Props) {
+export default function PipelineBoard({ candidates, onCandidateClick, onDragStart, onDragEnd }: Props) {
     const byStage = (stage: Stage) => candidates.filter(c => c.stage === stage);
 
     const handleDragEnd = (result: DropResult) => {
@@ -82,7 +83,10 @@ export default function PipelineBoard({ candidates, onCandidateClick, onDragEnd 
     };
 
     return (
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext 
+            onDragStart={onDragStart}
+            onDragEnd={handleDragEnd}
+        >
             <div>
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-sm font-semibold text-slate-800">Pipeline Overview</h2>
