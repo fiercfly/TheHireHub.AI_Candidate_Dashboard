@@ -31,7 +31,7 @@ const KanbanCard = ({ candidate, onClick, index }: { candidate: Candidate; onCli
                     if (e.defaultPrevented) return;
                     onClick();
                 }}
-                className={`bg-white rounded-xl p-3.5 cursor-pointer border hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5 group shadow-sm ${
+                className={`bg-white rounded-xl p-3.5 cursor-pointer border focus:outline-none hover:border-blue-300 hover:shadow-md hover:-translate-y-0.5 group shadow-sm ${
                     snapshot.isDragging ? 'border-blue-500 shadow-lg ring-2 ring-blue-500/20 z-[100] !transition-none' : 'border-slate-200 transition-all'
                 }`}
                 style={provided.draggableProps.style}
