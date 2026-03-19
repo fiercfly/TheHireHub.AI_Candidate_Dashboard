@@ -44,6 +44,7 @@ const PAGE_META: Record<SidebarPage, { title: string; crumbs: { label: string }[
 };
 
 export default function App() {
+  const [candidates, setCandidates] = useState<Candidate[]>(mockCandidates);
   const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('table');
@@ -51,6 +52,13 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activePage, setActivePage] = useState<SidebarPage>('dashboard');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleUpdateCandidate = (updatedCandidate: Candidate) => {
+    setCandidates(prev => prev.map(c => c.id === updatedCandidate.id ? updatedCandidate : c));
+    if (selectedCandidate?.id === updatedCandidate.id) {
+      setSelectedCandidate(updatedCandidate);
+    }
+  };
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 1200);
@@ -62,7 +70,7 @@ export default function App() {
   };
 
   const filteredCandidates = useMemo(() => {
-    return mockCandidates.filter(c => {
+    return candidates.filter(c => {
       const q = filters.search.toLowerCase();
       if (q && !c.name.toLowerCase().includes(q) && !c.company.toLowerCase().includes(q) && !c.currentRole.toLowerCase().includes(q)) return false;
       if (filters.stage !== 'All' && c.stage !== filters.stage) return false;
@@ -70,7 +78,7 @@ export default function App() {
       if (c.matchScore < filters.scoreMin || c.matchScore > filters.scoreMax) return false;
       return true;
     });
-  }, [filters]);
+  }, [filters, candidates]);
 
   const renderPage = () => {
     switch (activePage) {
@@ -164,7 +172,11 @@ export default function App() {
         {renderPage()}
       </div>
 
-      <CandidateDrawer candidate={selectedCandidate} onClose={() => setSelectedCandidate(null)} />
+      <CandidateDrawer 
+        candidate={selectedCandidate} 
+        onClose={() => setSelectedCandidate(null)} 
+        onUpdateCandidate={handleUpdateCandidate} 
+      />
       <AddCandidateModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}

@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { type Candidate, STAGE_META, STAGES } from '../types';
+import { type Candidate, type Note, STAGE_META, STAGES } from '../types';
 
 interface Props {
     candidate: Candidate | null;
     onClose: () => void;
+    onUpdateCandidate: (candidate: Candidate) => void;
 }
 
 const timeAgo = (dateStr: string): string => {
@@ -20,7 +21,7 @@ const formatDate = (dateStr?: string) => {
 const avatarColors = ['bg-blue-500', 'bg-violet-500', 'bg-emerald-500', 'bg-amber-500', 'bg-rose-500', 'bg-sky-500'];
 const getAvatarColor = (initials: string) => avatarColors[initials.charCodeAt(0) % avatarColors.length];
 
-export default function CandidateDrawer({ candidate, onClose }: Props) {
+export default function CandidateDrawer({ candidate, onClose, onUpdateCandidate }: Props) {
     const [note, setNote] = useState('');
     const [activeTab, setActiveTab] = useState<'overview' | 'interviews' | 'notes'>('overview');
     const [visible, setVisible] = useState(false);
@@ -47,8 +48,42 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
 
     const handleSaveNote = () => {
         if (!note.trim()) return;
-        setSavedNotes(prev => [...prev, { id: Date.now().toString(), text: note.trim(), author: 'Sarah Chen', createdAt: new Date().toISOString() }]);
+        const newNote: Note = { 
+            id: Date.now().toString(), 
+            text: note.trim(), 
+            author: 'Sarah Chen', 
+            avatar: 'SC',
+            createdAt: new Date().toISOString() 
+        };
+        setSavedNotes(prev => [...prev, newNote]);
         setNote('');
+        
+        if (candidate) {
+            onUpdateCandidate({
+                ...candidate,
+                notes: [...(candidate.notes || []), newNote]
+            });
+        }
+    };
+
+    const handleStageChange = (newStage: string) => {
+        if (candidate) {
+            onUpdateCandidate({ ...candidate, stage: newStage as any });
+        }
+    };
+
+    const handleStatusChange = (newStatus: string) => {
+        if (candidate) {
+            onUpdateCandidate({ ...candidate, status: newStatus as any });
+        }
+    };
+
+    const handleMoveForward = () => {
+        if (!candidate) return;
+        const nextIdx = stageIdx + 1;
+        if (nextIdx < STAGES.length) {
+            handleStageChange(STAGES[nextIdx]);
+        }
     };
 
     if (!candidate) return null;
@@ -92,16 +127,31 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                             <div>
                                 <h2 className="text-base font-bold text-slate-900">{candidate.name}</h2>
                                 <p className="text-sm text-slate-500">{candidate.currentRole} · {candidate.company}</p>
-                                <div className="flex items-center gap-2 mt-1.5">
-                                    <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-full ${meta.bg} ${meta.text} border ${meta.border}`}>
-                                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-                                        {candidate.stage}
-                                    </span>
-                                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${candidate.status === 'Active'
-                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                        : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                                        {candidate.status}
-                                    </span>
+                                <div className="flex items-center gap-2 mt-1.5 font-sans">
+                                    <div className="relative group/select">
+                                        <select 
+                                            value={candidate.stage}
+                                            onChange={(e) => handleStageChange(e.target.value)}
+                                            className={`appearance-none pl-2.5 pr-8 py-1 text-[11px] font-bold rounded-full border cursor-pointer outline-none transition-all ${meta.bg} ${meta.text} ${meta.border} hover:shadow-sm focus:ring-2 focus:ring-blue-100`}
+                                        >
+                                            {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                                        </select>
+                                        <svg className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </div>
+                                    <div className="relative">
+                                        <select 
+                                            value={candidate.status}
+                                            onChange={(e) => handleStatusChange(e.target.value)}
+                                            className={`appearance-none pl-2.5 pr-8 py-1 text-[11px] font-bold rounded-full border cursor-pointer outline-none transition-all ${candidate.status === 'Active'
+                                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 focus:ring-emerald-100'
+                                                : 'bg-slate-100 text-slate-600 border-slate-200 focus:ring-slate-100'} hover:shadow-sm`}
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Withdrawn">Withdrawn</option>
+                                        </select>
+                                        <svg className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-60" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -335,10 +385,17 @@ export default function CandidateDrawer({ candidate, onClose }: Props) {
                         <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-colors">
                             Schedule Interview
                         </button>
-                        <button className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm">
+                        <button 
+                            onClick={handleMoveForward}
+                            disabled={stageIdx === STAGES.length - 1}
+                            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
                             Move Forward →
                         </button>
-                        <button className="py-2.5 px-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors border border-red-200">
+                        <button 
+                            onClick={() => handleStatusChange('Inactive')}
+                            className="py-2.5 px-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors border border-red-200"
+                        >
                             Reject
                         </button>
                     </div>

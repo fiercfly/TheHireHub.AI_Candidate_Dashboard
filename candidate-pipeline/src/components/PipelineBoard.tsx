@@ -30,6 +30,8 @@ const KanbanCard = ({ candidate, onClick }: { candidate: Candidate; onClick: () 
                 <div className="min-w-0">
                     <p className="text-sm font-semibold text-slate-800 truncate leading-tight">{candidate.name}</p>
                     <p className="text-xs text-slate-400 truncate">{candidate.company}</p>
+
+
                 </div>
             </div>
             <ScoreBadge score={candidate.matchScore} />
@@ -38,10 +40,10 @@ const KanbanCard = ({ candidate, onClick }: { candidate: Candidate; onClick: () 
         <div className="flex flex-wrap gap-1">
             {candidate.skills.slice(0, 2).map(s => {
                 let cls = 'bg-slate-100 text-slate-500 border-slate-200';
-                if (s.color.includes('blue'))    cls = 'bg-blue-50 text-blue-600 border-blue-200';
+                if (s.color.includes('blue')) cls = 'bg-blue-50 text-blue-600 border-blue-200';
                 else if (s.color.includes('emerald')) cls = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-                else if (s.color.includes('indigo'))  cls = 'bg-indigo-50 text-indigo-600 border-indigo-200';
-                else if (s.color.includes('rose'))    cls = 'bg-rose-50 text-rose-600 border-rose-200';
+                else if (s.color.includes('indigo')) cls = 'bg-indigo-50 text-indigo-600 border-indigo-200';
+                else if (s.color.includes('rose')) cls = 'bg-rose-50 text-rose-600 border-rose-200';
                 return <span key={s.name} className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${cls}`}>{s.name}</span>;
             })}
             {candidate.skills.length > 2 && (
