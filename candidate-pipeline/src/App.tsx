@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 import Sidebar, { type SidebarPage } from './components/Sidebar';
 import Header from './components/Header';
 import JobOverview from './components/JobOverview';
@@ -90,7 +91,7 @@ export default function App() {
       case 'jobs':
       default:
         return (
-          <main className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-4">
+        <main className={`flex-1 px-4 md:px-6 py-5 space-y-4 ${viewMode === 'pipeline' ? 'overflow-auto' : 'overflow-y-auto'}`}>
             <JobOverview job={mockJob} loading={loading} />
 
             {/* View toggle */}
@@ -126,8 +127,10 @@ export default function App() {
               </div>
             </div>
 
-            {viewMode === 'pipeline' && (
-              <div className="overflow-x-auto pb-4">
+            <SearchFilters filters={filters} onChange={handleFilterChange} resultCount={loading ? 0 : filteredCandidates.length} />
+
+            {viewMode === 'pipeline' ? (
+              <div className="pb-4">
                 {loading ? (
                   <div className="flex flex-col lg:flex-row gap-4 lg:gap-3 lg:min-w-[900px]">
                     {[1,2,3,4,5].map(i => (
@@ -143,42 +146,43 @@ export default function App() {
                     onCandidateClick={setSelectedCandidate} 
                     onDragStart={() => setSelectedCandidate(null)}
                     onDragEnd={(candidateId: string, newStage: Stage, destinationIndex: number) => {
-                      setCandidates(prev => {
-                        const newCandidates = [...prev];
-                        const globalIndex = newCandidates.findIndex(c => c.id === candidateId);
-                        if (globalIndex === -1) return prev;
-                        
-                        // Remove the element from its old position
-                        const [draggedCandidate] = newCandidates.splice(globalIndex, 1);
-                        const updatedCandidate = { ...draggedCandidate, stage: newStage };
-                        
-                        // Find what currently occupies the destination index in the filtered stage view
-                        const stageFiltered = filteredCandidates.filter(c => c.stage === newStage && c.id !== candidateId);
-                        const targetCandidate = stageFiltered[destinationIndex];
-                        
-                        if (targetCandidate) {
-                            const targetGlobalIndex = newCandidates.findIndex(c => c.id === targetCandidate.id);
-                            if (targetGlobalIndex !== -1) {
-                                newCandidates.splice(targetGlobalIndex, 0, updatedCandidate);
-                            } else {
-                                newCandidates.push(updatedCandidate);
-                            }
-                        } else {
-                            // If dropped at the end
-                            newCandidates.push(updatedCandidate);
-                        }
-                        
-                        return newCandidates;
+                      flushSync(() => {
+                        setCandidates(prev => {
+                          const newCandidates = [...prev];
+                          const globalIndex = newCandidates.findIndex(c => c.id === candidateId);
+                          if (globalIndex === -1) return prev;
+                          
+                          // Remove the element from its old position
+                          const [draggedCandidate] = newCandidates.splice(globalIndex, 1);
+                          const updatedCandidate = { ...draggedCandidate, stage: newStage };
+                          
+                          // Find what currently occupies the destination index in the filtered stage view
+                          const stageFiltered = filteredCandidates.filter(c => c.stage === newStage && c.id !== candidateId);
+                          const targetCandidate = stageFiltered[destinationIndex];
+                          
+                          if (targetCandidate) {
+                              const targetGlobalIndex = newCandidates.findIndex(c => c.id === targetCandidate.id);
+                              if (targetGlobalIndex !== -1) {
+                                  newCandidates.splice(targetGlobalIndex, 0, updatedCandidate);
+                              } else {
+                                  newCandidates.push(updatedCandidate);
+                              }
+                          } else {
+                              // If dropped at the end
+                              newCandidates.push(updatedCandidate);
+                          }
+                          
+                          return newCandidates;
+                        });
+                        setSelectedCandidate(null);
                       });
-                      setSelectedCandidate(null);
                     }}
                   />
                 )}
               </div>
+            ) : (
+                <CandidateTable candidates={filteredCandidates} onCandidateClick={setSelectedCandidate} loading={loading} />
             )}
-
-            <SearchFilters filters={filters} onChange={handleFilterChange} resultCount={loading ? 0 : filteredCandidates.length} />
-            <CandidateTable candidates={filteredCandidates} onCandidateClick={setSelectedCandidate} loading={loading} />
             <div className="h-4" />
           </main>
         );
